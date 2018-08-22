@@ -78,46 +78,51 @@ def move(extract_dir, dst_dir):
     # check the contents on extracted folder
     paths = [os.path.join(extract_dir, fn) for fn in os.listdir(extract_dir)]
     for path in paths:
-        if os.path.isfile(path):
-            sys.stdout.write("file {}\n".format(path))
+        try:
+            if os.path.isfile(path):
+                sys.stdout.write("file {}\n".format(path))
 
-            tail, fn = os.path.split(path)
-            base, ext = os.path.splitext(fn)
+                tail, fn = os.path.split(path)
+                base, ext = os.path.splitext(fn)
 
-            if ext == TXT_EXT and base.find(KEY_NCOA) != -1:
-                sys.stdout.write("\t {} -> {}\n".format(fn, KEY_NCOA))
+                if ext == TXT_EXT and base.find(KEY_NCOA) != -1:
+                    sys.stdout.write("\t {} -> {}\n".format(fn, KEY_NCOA))
 
-                new_path = os.path.join(dst_dir, DST_FOLDER_NCOA, fn)
-                os.rename(path, new_path)
+                    new_path = os.path.join(dst_dir, DST_FOLDER_NCOA, fn)
+                    os.rename(path, new_path)
 
-            elif ext == CSV_EXT and base.find(KEY_ERROR) != -1:
-                sys.stdout.write("\t {} -> {}\n".format(fn, KEY_ERROR))
+                elif ext == CSV_EXT and base.find(KEY_ERROR) != -1:
+                    sys.stdout.write("\t {} -> {}\n".format(fn, KEY_ERROR))
 
-                new_path = os.path.join(dst_dir, DST_FOLDER_ERRORS, fn)
-                os.rename(path, new_path)
+                    new_path = os.path.join(dst_dir, DST_FOLDER_ERRORS, fn)
+                    os.rename(path, new_path)
 
-            elif ext == CSV_EXT and base.find(KEY_CORRECTIONS) != -1:
-                sys.stdout.write("\t {} -> {}\n".format(fn, KEY_CORRECTIONS))
+                elif ext == CSV_EXT and base.find(KEY_CORRECTIONS) != -1:
+                    sys.stdout.write("\t {} -> {}\n".format(fn, KEY_CORRECTIONS))
 
-                new_path = os.path.join(dst_dir, DST_FOLDER_CORRECTIONS, fn)
-                os.rename(path, new_path)
+                    new_path = os.path.join(dst_dir, DST_FOLDER_CORRECTIONS, fn)
+                    os.rename(path, new_path)
 
-        else:  # folder
-            sys.stdout.write("folder {}\n".format(path))
+            else:  # folder
+                sys.stdout.write("folder {}\n".format(path))
 
-            if path.endswith(KEY_ENOTIFY):
-                content_paths = [os.path.join(path, fn) for fn in os.listdir(path)]
-                for content_path in content_paths:
-                    fn = os.path.split(content_path)[1]
-                    ext = os.path.splitext(fn)[1].lower()
-                    if ext in [CSV_EXT, TXT_EXT]:
-                        sys.stdout.write("\t {} -> {}\n".format(fn, KEY_ENOTIFY))
+                if path.endswith(KEY_ENOTIFY):
+                    content_paths = [os.path.join(path, fn) for fn in os.listdir(path)]
+                    for content_path in content_paths:
+                        fn = os.path.split(content_path)[1]
+                        ext = os.path.splitext(fn)[1].lower()
+                        if ext in [CSV_EXT, TXT_EXT]:
+                            sys.stdout.write("\t {} -> {}\n".format(fn, KEY_ENOTIFY))
 
-                        new_path = os.path.join(dst_dir, DST_FOLDER_ENOTIFY, fn)
-                        os.rename(content_path, new_path)
+                            new_path = os.path.join(dst_dir, DST_FOLDER_ENOTIFY, fn)
+                            os.rename(content_path, new_path)
+
+        except Exception as e:
+            print(e)
 
     # remove all remaining contents on extract dir
     shutil.rmtree(extract_dir, ignore_errors=True)
+    shutil.rmtree(os.path.join(extract_dir, os.pardir), ignore_errors=True)
 
 
 def removing(zip_paths):
@@ -126,28 +131,17 @@ def removing(zip_paths):
 
 
 if __name__ == '__main__':
-    sys.argv = ["self", "../source", "../data"]
+    cur_dir = os.path.dirname(os.path.realpath(__file__))
 
-    if len(sys.argv) != 3:
-        sys.stderr.write(
-            "Error, invalid arguments. Need to run this script with 'python move.py [src_dir] [dst_dir]'.\n")
-        sys.exit(0)
+    _src_dir = cur_dir
+    _dst_dir = cur_dir
 
-    _src_dir = sys.argv[1]
-    _dst_dir = sys.argv[2]
+    # check the existence of the destination folders
 
-    if not os.path.isdir(_src_dir):
-        sys.stderr.write("Error, Source: is not a directory : {}.\n".format(_src_dir))
-        sys.exit(0)
-    if not os.path.exists(_src_dir):
-        sys.stderr.write("Error, Source: no exist a directory : {}.\n".format(_src_dir))
-        sys.exit(0)
-    if not os.path.isdir(_dst_dir):
-        sys.stderr.write("Error, Destination: not a directory : {}.\n".format(_dst_dir))
-        sys.exit(0)
-    if not os.path.exists(_dst_dir):
-        sys.stderr.write("Error, Destination: no exist a directory : {}.\n".format(_dst_dir))
-        sys.exit(0)
+    for key in [DST_FOLDER_ENOTIFY, DST_FOLDER_CORRECTIONS, DST_FOLDER_ERRORS, DST_FOLDER_NCOA]:
+        dst = os.path.join(_dst_dir, key)
+        if not os.path.exists(dst) or not os.path.isdir(dst):
+            os.mkdir(dst)
 
     # step 1
     sys.stdout.write("### check the extensions on source directory {}\n".format(_src_dir))
@@ -169,4 +163,3 @@ if __name__ == '__main__':
         removing(zip_paths=zip_paths)
 
     sys.stdout.write("Done!")
-
