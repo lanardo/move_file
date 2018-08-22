@@ -21,8 +21,6 @@ DST_FOLDER_ENOTIFY = "eNotify"
 
 
 def check_extensions(src_dir):
-    sys.stdout.write("[step 1] ### check the extension and renaming on src folder. {}\n".format(src_dir))
-    #
     paths = [os.path.join(src_dir, fn) for fn in os.listdir(src_dir) if os.path.splitext(fn)[1].lower() == INPUT_EXT]
 
     return paths
@@ -64,9 +62,7 @@ def extracting(zip_path):
 
     # if already exist then remove all contents of this dir
     if os.path.exists(extract_dir):
-        fns = [f for f in os.listdir(extract_dir)]
-        for fn in fns:
-            os.remove(os.path.join(extract_dir, fn))
+        shutil.rmtree(extract_dir, ignore_errors=True)
     else:
         os.mkdir(extract_dir)
 
@@ -75,7 +71,7 @@ def extracting(zip_path):
     else:
         unzip3(zip_path, extract_dir)
 
-    return extract_dir
+    return os.path.join(extract_dir, os.listdir(extract_dir)[0])
 
 
 def move(extract_dir, dst_dir):
@@ -85,7 +81,7 @@ def move(extract_dir, dst_dir):
         if os.path.isfile(path):
             sys.stdout.write("file {}\n".format(path))
 
-            tail, fn = os.path.split(path)[1]
+            tail, fn = os.path.split(path)
             base, ext = os.path.splitext(fn)
 
             if ext == TXT_EXT and base.find(KEY_NCOA) != -1:
@@ -121,9 +117,6 @@ def move(extract_dir, dst_dir):
                         os.rename(content_path, new_path)
 
     # remove all remaining contents on extract dir
-    paths = [os.path.join(extract_dir, fn) for fn in os.listdir(extract_dir)]
-    for path in paths:
-        os.remove(path)
     shutil.rmtree(extract_dir, ignore_errors=True)
 
 
@@ -133,6 +126,7 @@ def removing(zip_paths):
 
 
 if __name__ == '__main__':
+    sys.argv = ["self", "../source", "../data"]
 
     if len(sys.argv) != 3:
         sys.stderr.write(
@@ -156,11 +150,16 @@ if __name__ == '__main__':
         sys.exit(0)
 
     # step 1
+    sys.stdout.write("### check the extensions on source directory {}\n".format(_src_dir))
     zipx_paths = check_extensions(src_dir=_src_dir)
+    sys.stdout.write("\t number of zipx files {}\n".format(len(zipx_paths)))
 
     # step 2
+    sys.stdout.write("### rename zipx to zip\n")
     zip_paths = renaming(paths=zipx_paths)
+    sys.stdout.write("\t number of zip files {}\n".format(len(zip_paths)))
 
+    sys.stdout.write("### extracting...\n")
     for zip_path in zip_paths:
         # step 3
         extract_dir = extracting(zip_path=zip_path)
