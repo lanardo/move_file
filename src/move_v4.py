@@ -160,7 +160,7 @@ if __name__ == '__main__':
         extract_dir = extracting(zip_path=zip_path)
         move(extract_dir=extract_dir, dst_dir=_dst_dir)
 
-        # step 4
-        removing(zip_paths=zip_paths)
+    # step 4
+    removing(zip_paths=zip_paths)
 
     sys.stdout.write("Done!")
