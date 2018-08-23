@@ -71,12 +71,12 @@ def extracting(zip_path):
     else:
         unzip3(zip_path, extract_dir)
 
-    return os.path.join(extract_dir, os.listdir(extract_dir)[0])
+    return extract_dir
 
 
 def move(extract_dir, dst_dir):
     # check the contents on extracted folder
-    paths = [os.path.join(extract_dir, fn) for fn in os.listdir(extract_dir)]
+    paths = [os.path.join(extract_dir, name) for name in os.listdir(extract_dir)]
     for path in paths:
         try:
             if os.path.isfile(path):
@@ -116,13 +116,14 @@ def move(extract_dir, dst_dir):
 
                             new_path = os.path.join(dst_dir, DST_FOLDER_ENOTIFY, fn)
                             os.rename(content_path, new_path)
+                else:
+                    move(extract_dir=path, dst_dir=dst_dir)
 
         except Exception as e:
             print(e)
 
     # remove all remaining contents on extract dir
     shutil.rmtree(extract_dir, ignore_errors=True)
-    shutil.rmtree(os.path.join(extract_dir, os.pardir), ignore_errors=True)
 
 
 def removing(zip_paths):
